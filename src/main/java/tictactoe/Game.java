@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.random.RandomGenerator;
+import java.util.Random;
 
 /**
  * Core game controller implementing the dynamic 3D Tic-Tac-Toe ruleset.
@@ -17,10 +17,10 @@ public class Game {
     private final Map<Player, Set<String>> scoredLines = new HashMap<>();
     private final int pieceCap;
     private final int turnLimit;
-    private final RandomGenerator rng;
+    private final Random rng;
     private int currentTurn;
 
-    public Game(List<Player> players, int pieceCap, int turnLimit, RandomGenerator rng) {
+    public Game(List<Player> players, int pieceCap, int turnLimit, Random rng) {
         this.players = new ArrayList<>(players);
         this.pieceCap = pieceCap;
         this.turnLimit = turnLimit;

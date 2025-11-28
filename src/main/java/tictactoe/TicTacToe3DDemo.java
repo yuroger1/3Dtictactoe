@@ -1,7 +1,7 @@
 package tictactoe;
 
 import java.util.List;
-import java.util.random.RandomGenerator;
+import java.util.Random;
 
 /**
  * Simple console driver that exercises the 3x3x3 strategic Tic-Tac-Toe rules.
@@ -10,7 +10,7 @@ public class TicTacToe3DDemo {
     public static void main(String[] args) {
         Player alice = new Player("Alice");
         Player bob = new Player("Bob");
-        Game game = new Game(List.of(alice, bob), 5, 20, RandomGenerator.of("L128X256MixRandom"));
+        Game game = new Game(List.of(alice, bob), 5, 20, new Random());
 
         // Sample opening
         game.placePiece(alice, new Position(0, 0, 0));
