@@ -15,6 +15,11 @@ public class Board {
 
     private final Piece[][][] grid = new Piece[SIZE][SIZE][SIZE];
     private final int[][][] frozenTurns = new int[SIZE][SIZE][SIZE];
+    private final List<List<Position>> allLines;
+
+    public Board() {
+        this.allLines = computeAllLines();
+    }
 
     public boolean inBounds(Position pos) {
         return pos.getX() >= 0 && pos.getX() < SIZE
@@ -75,30 +80,35 @@ public class Board {
     }
 
     public void shiftLayerUp(int layer) {
-        shiftLayer(layer, 1);
+        if (layer < 0 || layer >= SIZE - 1) {
+            return; // cannot shift the topmost layer up
+        }
+        swapLayers(layer, layer + 1);
     }
 
     public void shiftLayerDown(int layer) {
-        shiftLayer(layer, -1);
+        if (layer <= 0 || layer >= SIZE) {
+            return; // cannot shift the bottommost layer down
+        }
+        swapLayers(layer, layer - 1);
     }
 
-    private void shiftLayer(int layer, int delta) {
-        Piece[][] newGrid = new Piece[SIZE][SIZE];
-        int[][] newFrozen = new int[SIZE][SIZE];
+    private void swapLayers(int firstLayer, int secondLayer) {
         for (int x = 0; x < SIZE; x++) {
             for (int y = 0; y < SIZE; y++) {
-                int newZ = (layer + delta + SIZE) % SIZE;
-                newGrid[x][y] = grid[x][y][layer];
-                newFrozen[x][y] = frozenTurns[x][y][layer];
-                if (grid[x][y][newZ] != null) {
-                    grid[x][y][newZ].setPosition(new Position(x, y, layer));
+                Piece tempPiece = grid[x][y][firstLayer];
+                int tempFrozen = frozenTurns[x][y][firstLayer];
+
+                grid[x][y][firstLayer] = grid[x][y][secondLayer];
+                frozenTurns[x][y][firstLayer] = frozenTurns[x][y][secondLayer];
+                if (grid[x][y][firstLayer] != null) {
+                    grid[x][y][firstLayer].setPosition(new Position(x, y, firstLayer));
                 }
-                grid[x][y][layer] = grid[x][y][newZ];
-                frozenTurns[x][y][layer] = frozenTurns[x][y][newZ];
-                grid[x][y][newZ] = newGrid[x][y];
-                frozenTurns[x][y][newZ] = newFrozen[x][y];
-                if (newGrid[x][y] != null) {
-                    newGrid[x][y].setPosition(new Position(x, y, newZ));
+
+                grid[x][y][secondLayer] = tempPiece;
+                frozenTurns[x][y][secondLayer] = tempFrozen;
+                if (grid[x][y][secondLayer] != null) {
+                    grid[x][y][secondLayer].setPosition(new Position(x, y, secondLayer));
                 }
             }
         }
@@ -130,6 +140,10 @@ public class Board {
     }
 
     public List<List<Position>> listAllLines() {
+        return allLines;
+    }
+
+    private List<List<Position>> computeAllLines() {
         List<List<Position>> lines = new ArrayList<>();
         List<int[]> directions = List.of(
                 new int[]{1, 0, 0}, new int[]{0, 1, 0}, new int[]{0, 0, 1},

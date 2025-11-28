@@ -88,9 +88,14 @@ class TimeRewindCard extends Card {
         if (ctx.piece == null) {
             return;
         }
-        ctx.piece.resetAge();
-        player.getPiecesOnBoard().remove(ctx.piece);
-        player.getPiecesOnBoard().addLast(ctx.piece);
+        if (ctx.piece.getPosition() == null) {
+            return; // no longer on the board
+        }
+        boolean removed = player.getPiecesOnBoard().remove(ctx.piece);
+        if (removed) {
+            ctx.piece.resetAge();
+            player.getPiecesOnBoard().addLast(ctx.piece);
+        }
     }
 }
 
