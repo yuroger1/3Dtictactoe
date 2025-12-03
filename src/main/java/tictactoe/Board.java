@@ -39,6 +39,10 @@ public class Board {
         return frozenTurns[pos.getX()][pos.getY()][pos.getZ()] > 0;
     }
 
+    public int frozenTurnsRemaining(Position pos) {
+        return frozenTurns[pos.getX()][pos.getY()][pos.getZ()];
+    }
+
     public void freezeCell(Position pos, int turns) {
         if (!inBounds(pos)) {
             return;

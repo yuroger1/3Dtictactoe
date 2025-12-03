@@ -1,6 +1,7 @@
 package tictactoe;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -37,6 +38,14 @@ public class Game {
 
     public int getCurrentTurn() {
         return currentTurn;
+    }
+
+    public List<Player> getPlayers() {
+        return Collections.unmodifiableList(players);
+    }
+
+    public int getTurnLimit() {
+        return turnLimit;
     }
 
     public boolean placePiece(Player player, Position pos) {
