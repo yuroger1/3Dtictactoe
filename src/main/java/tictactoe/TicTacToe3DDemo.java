@@ -86,7 +86,9 @@ public class TicTacToe3DDemo {
             return false;
         }
         if (game.placePiece(current, pos)) {
-            offerAndPlayCard(scanner, game, current);
+            if (game.shouldOfferCard()) {
+                offerAndPlayCard(scanner, game, current);
+            }
             return true;
         }
         System.out.println("Cannot place there (occupied, frozen, or out of bounds).");

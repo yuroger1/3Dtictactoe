@@ -44,6 +44,13 @@ public class Game {
         return currentRound;
     }
 
+    /**
+     * Card offers begin on round 3 and repeat every two rounds (3, 5, 7, ...).
+     */
+    public boolean shouldOfferCard() {
+        return currentRound >= 3 && currentRound % 2 == 1;
+    }
+
     public List<Player> getPlayers() {
         return Collections.unmodifiableList(players);
     }
