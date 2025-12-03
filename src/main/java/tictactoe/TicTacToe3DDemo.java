@@ -13,7 +13,6 @@ import java.util.Scanner;
 public class TicTacToe3DDemo {
     private static final int PIECE_CAP = 5;
     private static final int TURN_LIMIT = 30;
-    private static final int CARD_INTERVAL = 3;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -31,14 +30,11 @@ public class TicTacToe3DDemo {
             printStatus(game);
             boolean turnComplete = false;
             while (!turnComplete) {
-                System.out.print("Action (place/card/capture/pass/status): ");
+                System.out.print("Action (place/capture/pass/status): ");
                 String action = scanner.nextLine().trim().toLowerCase(Locale.ROOT);
                 switch (action) {
                     case "place":
                         turnComplete = handlePlacement(scanner, game, current);
-                        break;
-                    case "card":
-                        turnComplete = handleCard(scanner, game, current);
                         break;
                     case "capture":
                         turnComplete = handleCapture(scanner, game, current);
@@ -78,41 +74,6 @@ public class TicTacToe3DDemo {
         }
         System.out.println("Cannot place there (occupied, frozen, or out of bounds).");
         return false;
-    }
-
-    private static boolean handleCard(Scanner scanner, Game game, Player current) {
-        if (current.getHand().isEmpty()) {
-            System.out.println("No cards in hand.");
-            return false;
-        }
-        System.out.println("Cards in hand:");
-        for (int i = 0; i < current.getHand().size(); i++) {
-            System.out.println("  [" + i + "] " + current.getHand().get(i).getName());
-        }
-        System.out.print("Choose card index (or blank to cancel): ");
-        String line = scanner.nextLine().trim();
-        if (line.isEmpty()) {
-            return false;
-        }
-        int index;
-        try {
-            index = Integer.parseInt(line);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid number.");
-            return false;
-        }
-        if (index < 0 || index >= current.getHand().size()) {
-            System.out.println("Index out of range.");
-            return false;
-        }
-
-        Card card = current.removeFromHand(index);
-        ActionContext ctx = buildContextForCard(scanner, game, current, card);
-        game.useCard(card, current, ctx);
-        if (card instanceof EmpowerCard) {
-            System.out.println("Piece empowered. Use 'capture' to move it onto an adjacent enemy.");
-        }
-        return true;
     }
 
     private static ActionContext buildContextForCard(Scanner scanner, Game game, Player current, Card card) {
@@ -170,32 +131,48 @@ public class TicTacToe3DDemo {
     }
 
     private static void maybeOfferCard(Scanner scanner, Game game, Player current) {
-        if ((game.getCurrentTurn() - 1) % CARD_INTERVAL != 0) {
+        if (!shouldOfferCard(game, current)) {
             return;
         }
         List<Card> offers = game.offerCards();
-        System.out.println("Card offer: choose one to add to your hand (or blank to skip)");
+        System.out.println("Card offer: choose one to play immediately this turn");
         for (int i = 0; i < offers.size(); i++) {
             System.out.println("  [" + i + "] " + offers.get(i).getName());
         }
-        System.out.print("Select: ");
-        String line = scanner.nextLine().trim();
-        if (line.isEmpty()) {
-            return;
+        Integer idx = null;
+        while (idx == null) {
+            System.out.print("Select: ");
+            String line = scanner.nextLine().trim();
+            try {
+                idx = Integer.parseInt(line);
+            } catch (NumberFormatException e) {
+                System.out.println("Enter 0 or 1 to choose a card.");
+                continue;
+            }
+            if (idx < 0 || idx >= offers.size()) {
+                System.out.println("Selection out of range.");
+                idx = null;
+            }
         }
-        int idx;
-        try {
-            idx = Integer.parseInt(line);
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid selection. No card added.");
-            return;
+
+        Card card = offers.get(idx);
+        ActionContext ctx = buildContextForCard(scanner, game, current, card);
+        game.useCard(card, current, ctx);
+        if (card instanceof EmpowerCard) {
+            System.out.println("Piece empowered. Use 'capture' to move it onto an adjacent enemy.");
         }
-        if (idx < 0 || idx >= offers.size()) {
-            System.out.println("Selection out of range.");
-            return;
+    }
+
+    private static boolean shouldOfferCard(Game game, Player current) {
+        List<Player> players = game.getPlayers();
+        int playerIndex = players.indexOf(current);
+        if (playerIndex == 1) { // second player draws starting turn 2 (even turns)
+            return game.getCurrentTurn() % 2 == 0;
         }
-        current.addToHand(offers.get(idx));
-        System.out.println("Added " + offers.get(idx).getName() + " to hand.");
+        if (playerIndex == 0) { // first player draws starting turn 3 (odd turns from 3)
+            return game.getCurrentTurn() >= 3 && game.getCurrentTurn() % 2 == 1;
+        }
+        return false;
     }
 
     private static Position readPosition(Scanner scanner, String prompt) {
@@ -264,22 +241,7 @@ public class TicTacToe3DDemo {
 
         System.out.println("Scores:");
         for (Player player : game.getPlayers()) {
-            System.out.println("  " + player.getName() + ": " + player.getScore()
-                    + " | Hand: " + describeHand(player));
+            System.out.println("  " + player.getName() + ": " + player.getScore());
         }
-    }
-
-    private static String describeHand(Player player) {
-        if (player.getHand().isEmpty()) {
-            return "(empty)";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < player.getHand().size(); i++) {
-            if (i > 0) {
-                sb.append(", ");
-            }
-            sb.append("[").append(i).append("] ").append(player.getHand().get(i).getName());
-        }
-        return sb.toString();
     }
 }
