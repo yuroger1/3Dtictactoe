@@ -19,14 +19,14 @@ public class Game {
     private final int pieceCap;
     private final int turnLimit;
     private final Random rng;
-    private int currentTurn;
+    private int currentRound;
 
     public Game(List<Player> players, int pieceCap, int turnLimit, Random rng) {
         this.players = new ArrayList<>(players);
         this.pieceCap = pieceCap;
         this.turnLimit = turnLimit;
         this.rng = rng;
-        this.currentTurn = 1;
+        this.currentRound = 1;
         for (Player player : players) {
             scoredLines.put(player, new HashSet<>());
         }
@@ -37,7 +37,11 @@ public class Game {
     }
 
     public int getCurrentTurn() {
-        return currentTurn;
+        return currentRound;
+    }
+
+    public int getCurrentRound() {
+        return currentRound;
     }
 
     public List<Player> getPlayers() {
@@ -53,7 +57,7 @@ public class Game {
             return false;
         }
         enforcePieceCap(player);
-        Piece piece = new Piece(player, currentTurn);
+        Piece piece = new Piece(player, currentRound);
         board.setPiece(pos, piece);
         player.getPiecesOnBoard().addLast(piece);
         scoreNewLines(player);
@@ -94,8 +98,8 @@ public class Game {
         }
     }
 
-    public void advanceTurn() {
-        currentTurn++;
+    public void advanceRound() {
+        currentRound++;
         board.tickFreezes();
         for (Player player : players) {
             for (Piece piece : player.getPiecesOnBoard()) {
@@ -118,7 +122,6 @@ public class Game {
     }
 
     public List<Card> offerCards() {
-        List<Card> options = new ArrayList<>();
         List<Card> deck = List.of(
                 new EmpowerCard(),
                 new LayerShiftUpCard(),
@@ -126,9 +129,14 @@ public class Game {
                 new TimeRewindCard(),
                 new FreezeCard()
         );
-        while (options.size() < 2) {
-            options.add(deck.get(rng.nextInt(deck.size())));
-        }
+        int first = rng.nextInt(deck.size());
+        int second;
+        do {
+            second = rng.nextInt(deck.size());
+        } while (second == first);
+        List<Card> options = new ArrayList<>(2);
+        options.add(deck.get(first));
+        options.add(deck.get(second));
         return options;
     }
 
@@ -143,6 +151,6 @@ public class Game {
     }
 
     public boolean isGameOver() {
-        return currentTurn > turnLimit;
+        return currentRound > turnLimit;
     }
 }

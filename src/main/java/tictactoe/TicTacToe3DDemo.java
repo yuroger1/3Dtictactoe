@@ -24,33 +24,16 @@ public class TicTacToe3DDemo {
         Game game = new Game(List.of(p1, p2), PIECE_CAP, TURN_LIMIT, new Random());
 
         while (!game.isGameOver()) {
-            Player current = currentPlayer(game);
-            System.out.println("\n=== Turn " + game.getCurrentTurn() + " / " + game.getTurnLimit() + " ===");
-            maybeOfferCard(scanner, game, current);
-            printStatus(game);
-            boolean turnComplete = false;
-            while (!turnComplete) {
-                System.out.print("Action (place/capture/pass/status): ");
-                String action = scanner.nextLine().trim().toLowerCase(Locale.ROOT);
-                switch (action) {
-                    case "place":
-                        turnComplete = handlePlacement(scanner, game, current);
-                        break;
-                    case "capture":
-                        turnComplete = handleCapture(scanner, game, current);
-                        break;
-                    case "status":
-                        printStatus(game);
-                        break;
-                    case "pass":
-                        turnComplete = true;
-                        break;
-                    default:
-                        System.out.println("Unknown action. Try again.");
-                        break;
+            System.out.println("\n=== Round " + game.getCurrentRound() + " / " + game.getTurnLimit() + " ===");
+            for (Player current : game.getPlayers()) {
+                if (game.isGameOver()) {
+                    break;
                 }
+                System.out.println("-- " + current.getName() + "'s placement --");
+                printStatus(game);
+                takeTurn(scanner, game, current);
             }
-            game.advanceTurn();
+            game.advanceRound();
         }
 
         System.out.println("\nGame over! Final scores:");
@@ -59,9 +42,42 @@ public class TicTacToe3DDemo {
         }
     }
 
-    private static Player currentPlayer(Game game) {
-        List<Player> players = game.getPlayers();
-        return players.get((game.getCurrentTurn() - 1) % players.size());
+    private static void takeTurn(Scanner scanner, Game game, Player current) {
+        boolean placed = false;
+        boolean finished = false;
+        while (!finished) {
+            String prompt = placed ? "Action (capture/status/end): " : "Action (place/status): ";
+            System.out.print(prompt);
+            String action = scanner.nextLine().trim().toLowerCase(Locale.ROOT);
+            switch (action) {
+                case "place":
+                    if (placed) {
+                        System.out.println("You already placed a piece this round.");
+                        break;
+                    }
+                    placed = handlePlacement(scanner, game, current);
+                    break;
+                case "capture":
+                    if (!placed) {
+                        System.out.println("Place a piece first.");
+                        break;
+                    }
+                    handleCapture(scanner, game, current);
+                    break;
+                case "status":
+                    printStatus(game);
+                    break;
+                case "end":
+                    if (!placed) {
+                        System.out.println("You must place a piece before ending your turn.");
+                        break;
+                    }
+                    finished = true;
+                    break;
+                default:
+                    System.out.println("Unknown action. Try again.");
+            }
+        }
     }
 
     private static boolean handlePlacement(Scanner scanner, Game game, Player current) {
@@ -70,6 +86,7 @@ public class TicTacToe3DDemo {
             return false;
         }
         if (game.placePiece(current, pos)) {
+            offerAndPlayCard(scanner, game, current);
             return true;
         }
         System.out.println("Cannot place there (occupied, frozen, or out of bounds).");
@@ -130,12 +147,9 @@ public class TicTacToe3DDemo {
         return piece;
     }
 
-    private static void maybeOfferCard(Scanner scanner, Game game, Player current) {
-        if (!shouldOfferCard(game, current)) {
-            return;
-        }
+    private static void offerAndPlayCard(Scanner scanner, Game game, Player current) {
         List<Card> offers = game.offerCards();
-        System.out.println("Card offer: choose one to play immediately this turn");
+        System.out.println("Card offer: choose one to play immediately");
         for (int i = 0; i < offers.size(); i++) {
             System.out.println("  [" + i + "] " + offers.get(i).getName());
         }
@@ -161,18 +175,6 @@ public class TicTacToe3DDemo {
         if (card instanceof EmpowerCard) {
             System.out.println("Piece empowered. Use 'capture' to move it onto an adjacent enemy.");
         }
-    }
-
-    private static boolean shouldOfferCard(Game game, Player current) {
-        List<Player> players = game.getPlayers();
-        int playerIndex = players.indexOf(current);
-        if (playerIndex == 1) { // second player draws starting turn 2 (even turns)
-            return game.getCurrentTurn() % 2 == 0;
-        }
-        if (playerIndex == 0) { // first player draws starting turn 3 (odd turns from 3)
-            return game.getCurrentTurn() >= 3 && game.getCurrentTurn() % 2 == 1;
-        }
-        return false;
     }
 
     private static Position readPosition(Scanner scanner, String prompt) {
