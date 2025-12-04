@@ -45,8 +45,14 @@ public class TicTacToe3DDemo {
     private static void takeTurn(Scanner scanner, Game game, Player current) {
         boolean placed = false;
         boolean finished = false;
+        boolean cardRound = game.shouldOfferCard();
         while (!finished) {
-            String prompt = placed ? "Action (capture/status/end): " : "Action (place/status): ";
+            String prompt;
+            if (cardRound) {
+                prompt = placed ? "Action (capture/status/end): " : "Action (place/status): ";
+            } else {
+                prompt = placed ? "Action (status/end): " : "Action (place/status): ";
+            }
             System.out.print(prompt);
             String action = scanner.nextLine().trim().toLowerCase(Locale.ROOT);
             switch (action) {
@@ -58,6 +64,10 @@ public class TicTacToe3DDemo {
                     placed = handlePlacement(scanner, game, current);
                     break;
                 case "capture":
+                    if (!cardRound) {
+                        System.out.println("Captures are only available in card-draw rounds after empowering.");
+                        break;
+                    }
                     if (!placed) {
                         System.out.println("Place a piece first.");
                         break;
@@ -86,7 +96,9 @@ public class TicTacToe3DDemo {
             return false;
         }
         if (game.placePiece(current, pos)) {
-            offerAndPlayCard(scanner, game, current);
+            if (game.shouldOfferCard()) {
+                offerAndPlayCard(scanner, game, current);
+            }
             return true;
         }
         System.out.println("Cannot place there (occupied, frozen, or out of bounds).");
