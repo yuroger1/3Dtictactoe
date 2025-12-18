@@ -88,7 +88,7 @@ public class TicTacToe3DJavaFX extends Application {
         placeRow.setAlignment(Pos.CENTER);
         Button placeButton = new Button("Place");
         placeButton.setMaxWidth(Double.MAX_VALUE);
-        placeButton.setOnAction(e -> handlePlacement());
+        placeButton.setOnAction(e -> handlePlacementFromFields());
 
         Label captureLabel = new Label("Capture (from x y z -> target x y z):");
         HBox captureRow = new HBox(6, captureFrom, captureTo);
@@ -106,12 +106,16 @@ public class TicTacToe3DJavaFX extends Application {
         return controls;
     }
 
-    private void handlePlacement() {
+    private void handlePlacementFromFields() {
         Position pos = parsePosition(placeX.getText(), placeY.getText(), placeZ.getText());
         if (pos == null) {
             hintLabel.setText("Enter numeric x y z.");
             return;
         }
+        attemptPlacement(pos);
+    }
+
+    private void attemptPlacement(Position pos) {
         Player current = players.get(currentPlayerIdx);
         if (game.placePiece(current, pos)) {
             placedThisTurn = true;
@@ -349,14 +353,16 @@ public class TicTacToe3DJavaFX extends Application {
 
     private class IsoBoardView extends Canvas {
         private static final double CELL = 70;
-        private static final double LAYER_HEIGHT = 50;
+        private static final double LAYER_HEIGHT = 90;
         private static final Color CELL_COLOR = Color.rgb(245, 230, 200);
         private Game game;
+        private final List<CellFace> cellFaces = new ArrayList<>();
 
         IsoBoardView() {
             super(700, 620);
             widthProperty().addListener((obs, oldV, newV) -> redraw());
             heightProperty().addListener((obs, oldV, newV) -> redraw());
+            setOnMouseClicked(e -> handleCanvasClick(e.getX(), e.getY()));
         }
 
         void setGame(Game game) {
@@ -369,6 +375,7 @@ public class TicTacToe3DJavaFX extends Application {
             }
             GraphicsContext gc = getGraphicsContext2D();
             gc.clearRect(0, 0, getWidth(), getHeight());
+            cellFaces.clear();
 
             double originX = getWidth() / 2;
             double originY = getHeight() / 2 + 80;
@@ -397,6 +404,8 @@ public class TicTacToe3DJavaFX extends Application {
                         gc.setStroke(Color.BLACK);
                         gc.setLineWidth(1.0);
                         gc.strokePolygon(xs, ys, 4);
+
+                        cellFaces.add(new CellFace(pos, xs, ys));
 
                         Position pos = new Position(x, y, z);
                         if (board.isFrozen(pos)) {
@@ -494,6 +503,51 @@ public class TicTacToe3DJavaFX extends Application {
             double isoX = (x - y) * CELL * 0.9;
             double isoY = (x + y) * CELL * 0.45 - z * LAYER_HEIGHT;
             return new Point2D(originX + isoX, originY + isoY);
+        }
+
+        private void handleCanvasClick(double x, double y) {
+            Position pos = findCellAt(x, y);
+            if (pos != null) {
+                placeX.setText(String.valueOf(pos.getX()));
+                placeY.setText(String.valueOf(pos.getY()));
+                placeZ.setText(String.valueOf(pos.getZ()));
+                attemptPlacement(pos);
+            }
+        }
+
+        private Position findCellAt(double x, double y) {
+            // iterate from top layer down to pick visible cell first
+            for (int i = cellFaces.size() - 1; i >= 0; i--) {
+                CellFace face = cellFaces.get(i);
+                if (pointInPolygon(x, y, face.xs, face.ys)) {
+                    return face.position;
+                }
+            }
+            return null;
+        }
+
+        private boolean pointInPolygon(double x, double y, double[] xs, double[] ys) {
+            boolean inside = false;
+            for (int i = 0, j = xs.length - 1; i < xs.length; j = i++) {
+                boolean intersect = ((ys[i] > y) != (ys[j] > y))
+                        && (x < (xs[j] - xs[i]) * (y - ys[i]) / (ys[j] - ys[i]) + xs[i]);
+                if (intersect) {
+                    inside = !inside;
+                }
+            }
+            return inside;
+        }
+    }
+
+    private static class CellFace {
+        final Position position;
+        final double[] xs;
+        final double[] ys;
+
+        CellFace(Position position, double[] xs, double[] ys) {
+            this.position = position;
+            this.xs = xs;
+            this.ys = ys;
         }
     }
 
