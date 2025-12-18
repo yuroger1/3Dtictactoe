@@ -9,6 +9,7 @@ A lightweight Java implementation of a dynamic 3×3×3 strategic Tic-Tac-Toe rul
 - Freeze timers and empowered captures that respect adjacency and ownership.
 - Console interface (`tictactoe.TicTacToe3DDemo`) that renders layers, offers cards starting round 3 (every two rounds), and lets players place, capture, or end their turn.
 - Swing GUI (`tictactoe.TicTacToe3DGui`) that presents stacked 3×3 boards with X/O styling, card prompts, and capture support on card rounds.
+- JavaFX GUI (`tictactoe.TicTacToe3DJavaFX`) that draws an isometric cube with stacked planes, highlights completed lines, and annotates each piece with remaining life.
 
 ## Running the demo
 Compile and run the Java sources from the repository root:
@@ -38,3 +39,14 @@ java -cp out tictactoe.TicTacToe3DGui
 ```
 
 Enter player names when prompted. Click a cell to place a piece each round, choose one of two cards on draw rounds (starting at round 3 and every other round), optionally capture with empowered pieces in card rounds, then end the turn so the next player can place.
+
+## Running the JavaFX GUI
+
+You need a JavaFX runtime on your machine. If `$PATH_TO_FX` points to the JavaFX SDK directory, compile and run like:
+
+```bash
+javac --module-path "$PATH_TO_FX/lib" --add-modules javafx.controls,javafx.graphics -d out $(find src/main/java -name "*.java")
+java --module-path "$PATH_TO_FX/lib" --add-modules javafx.controls,javafx.graphics -cp out tictactoe.TicTacToe3DJavaFX
+```
+
+The JavaFX view renders the transparent cube in isometric perspective. Enter coordinates to place pieces, choose cards on draw rounds starting at round 3 (every other round), and watch completed lines highlight with your color. Each piece shows its remaining life in turns.

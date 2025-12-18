@@ -16,6 +16,7 @@ public class Game {
     private final Board board = new Board();
     private final List<Player> players;
     private final Map<Player, Set<String>> scoredLines = new HashMap<>();
+    private final List<ScoredLine> lastCompletedLines = new ArrayList<>();
     private final int pieceCap;
     private final int turnLimit;
     private final Random rng;
@@ -83,6 +84,7 @@ public class Game {
     }
 
     private void scoreNewLines(Player player) {
+        lastCompletedLines.clear();
         Set<String> alreadyScored = scoredLines.get(player);
         for (List<Position> line : board.listAllLines()) {
             boolean fullByPlayer = true;
@@ -100,6 +102,7 @@ public class Game {
                 if (!alreadyScored.contains(key)) {
                     alreadyScored.add(key);
                     player.addScore(1);
+                    lastCompletedLines.add(new ScoredLine(player, new ArrayList<>(line)));
                 }
             }
         }
@@ -159,5 +162,27 @@ public class Game {
 
     public boolean isGameOver() {
         return currentRound > turnLimit;
+    }
+
+    public List<ScoredLine> getLastCompletedLines() {
+        return Collections.unmodifiableList(lastCompletedLines);
+    }
+
+    public static class ScoredLine {
+        private final Player player;
+        private final List<Position> positions;
+
+        public ScoredLine(Player player, List<Position> positions) {
+            this.player = player;
+            this.positions = positions;
+        }
+
+        public Player getPlayer() {
+            return player;
+        }
+
+        public List<Position> getPositions() {
+            return Collections.unmodifiableList(positions);
+        }
     }
 }

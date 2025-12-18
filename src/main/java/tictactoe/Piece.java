@@ -48,6 +48,10 @@ public class Piece {
         ageTurns = 0;
     }
 
+    public int turnsLifeRemaining(int turnLimit) {
+        return Math.max(0, turnLimit - ageTurns);
+    }
+
     public Position getPosition() {
         return position;
     }
